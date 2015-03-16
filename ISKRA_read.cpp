@@ -89,13 +89,13 @@ int main(){
 	}
 	
 		//----- CHECK FOR ANY RX BYTES -----
-	int run=0;
+	int run=1;
 	int rx_amount=0;
 	char rx_data[1024];
 	char *p_rx_data;
 	p_rx_data = &rx_data[0]; 
 
-	while(run==0){
+	while(run>0){
 		if (uart0_filestream != -1)
 		{
 			// Read up to 255 characters from the port if they are there
@@ -134,7 +134,7 @@ int main(){
 						printf("%.0fWh \n",ISKRA162.f_KW_totaal*1000);
 						std::cout<<"Hoog verbruik: "<<ISKRA162.hoog<<"kWh"<<'\n';
 						std::cout<<"Laag verbruik: "<<ISKRA162.laag<<"kWh"<<'\n';
-						run++;
+						run=0;
 					}
 				}
 			}
