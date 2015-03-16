@@ -86,12 +86,12 @@ int main(){
 	//	PARODD - Odd parity (else even)
 	struct termios options;
 	tcgetattr(uart0_filestream, &options);
-	options.c_cflag = B300 | CS7 | CLOCAL | CREAD | PARENB;		//<Set baud rate
+	//options.c_cflag = B300 | CS7 | CLOCAL | CREAD | PARENB;		//<Set baud rate
 	options.c_iflag = IGNPAR;
 	options.c_oflag = 0;
 	options.c_lflag = 0;
-	tcflush(uart0_filestream, TCIFLUSH);
-	tcsetattr(uart0_filestream, TCSANOW, &options);
+	//tcflush(uart0_filestream, TCIFLUSH);
+	//tcsetattr(uart0_filestream, TCSANOW, &options);
 
 
 	while(run>0){
@@ -132,6 +132,10 @@ int main(){
 		case 0: break;//do nothing until it's time to do something again
 		
 		case 1:{//set init message
+			options.c_cflag = B300 | CS7 | CLOCAL | CREAD | PARENB;		//<Set baud rate
+			tcflush(uart0_filestream, TCIFLUSH);
+			tcsetattr(uart0_filestream, TCSANOW, &options);
+
 			p_tx_buffer = &tx_buffer[0];
 			*p_tx_buffer++ = '/';
 			*p_tx_buffer++ = '?';
@@ -173,7 +177,7 @@ int main(){
 				step++;
 				//std::cout<<step<<"\r\n"; 				//debug
 			}
-			//printf(rx_data); 							//debug
+			//std::cout<<rx_data; 							//debug
 			break;
 		}
 		
@@ -186,8 +190,6 @@ int main(){
 					run=0;
 				}
 				else{
-					memset(rx_data,0,sizeof(rx_data));	//clear the data
-					p_rx_data = &rx_data[0];			//reset the pointer
 					step++;
 					//std::cout<<step<<"\r\n";			//debug
 				}
@@ -196,13 +198,16 @@ int main(){
 		}
 
 		case 5:{//we have send an acknowledge so we need to switch to the right speed 
-				int speed = rx_buffer[4];
+				int speed = rx_data[4];
+				//std::cout<<"speed:"<<speed<<"\r\n";		//debug
 				switch (speed){
 					case 1:{
 						options.c_cflag = B600 | CS7 | CLOCAL | CREAD | PARENB;			//<Set baud rate to 600 baud
 						tcflush(uart0_filestream, TCIFLUSH);
 						tcsetattr(uart0_filestream, TCSANOW, &options);
 						step++;
+						memset(rx_data,0,sizeof(rx_data));	//clear the data
+						p_rx_data = &rx_data[0];			//reset the pointer
 						break;
 
 					}
@@ -211,6 +216,8 @@ int main(){
 						tcflush(uart0_filestream, TCIFLUSH);
 						tcsetattr(uart0_filestream, TCSANOW, &options);
 						step++;
+						memset(rx_data,0,sizeof(rx_data));	//clear the data
+						p_rx_data = &rx_data[0];			//reset the pointer
 						break;
 
 					}
@@ -219,6 +226,8 @@ int main(){
 						tcflush(uart0_filestream, TCIFLUSH);
 						tcsetattr(uart0_filestream, TCSANOW, &options);
 						step++;
+						memset(rx_data,0,sizeof(rx_data));	//clear the data
+						p_rx_data = &rx_data[0];			//reset the pointer
 						break;
 
 					}
@@ -227,6 +236,8 @@ int main(){
 						tcflush(uart0_filestream, TCIFLUSH);
 						tcsetattr(uart0_filestream, TCSANOW, &options);
 						step++;
+						memset(rx_data,0,sizeof(rx_data));	//clear the data
+						p_rx_data = &rx_data[0];			//reset the pointer
 						break;
 
 					}
@@ -235,6 +246,8 @@ int main(){
 						tcflush(uart0_filestream, TCIFLUSH);
 						tcsetattr(uart0_filestream, TCSANOW, &options);
 						step++;
+						memset(rx_data,0,sizeof(rx_data));	//clear the data
+						p_rx_data = &rx_data[0];			//reset the pointer
 						break;
 
 					}
@@ -243,11 +256,15 @@ int main(){
 						tcflush(uart0_filestream, TCIFLUSH);
 						tcsetattr(uart0_filestream, TCSANOW, &options);
 						step++;
+						memset(rx_data,0,sizeof(rx_data));	//clear the data
+						p_rx_data = &rx_data[0];			//reset the pointer
 						break;
 
 					}
 					default:{
 						step++;
+						memset(rx_data,0,sizeof(rx_data));	//clear the data
+						p_rx_data = &rx_data[0];			//reset the pointer
 						break;
 					}
 				}
