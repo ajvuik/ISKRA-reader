@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <iostream>
+#include <time.h> 
 
 //using namespace std;
 
@@ -22,10 +23,33 @@ struct ISKRA{
 ISKRA ISKRA162;
 
 int main(){
+	//declare variables
+	//----- TX BYTES -----
+	unsigned char tx_buffer[10];
+	unsigned char *p_tx_buffer;
+	memset(tx_buffer,0,sizeof(tx_buffer));//clear the data
+	
+
+	//------- RX BYTES ------
+	int run=1;//run the program continuously
+	int rx_amount=0;
+	char rx_data[1024];
+	char *p_rx_data;
+	memset(rx_data,0,sizeof(rx_data));//clear the data
+	p_rx_data = &rx_data[0]; 
+	char rx_buffer[256];
+	int step = 1;//goto step 1 to initiate 1st read
+
+	
+	time_t now, old;
+	int seconds;
+	/*time structures*/
+	time(&now);  /* get current time; same as: now = time(NULL)  */
+	old = now;
+
 //-------------------------
-	//----- SETUP USART 0 -----
+	//----- SETUP USART -----
 	//-------------------------
-	//At bootup, pins 8 and 10 are already set to UART0_TXD, UART0_RXD (ie the alt0 function) respectively
 	int uart0_filestream = -1;
 	
 	//OPEN THE UART
@@ -47,6 +71,7 @@ int main(){
 	{
 		//ERROR - CAN'T OPEN SERIAL PORT
 		printf("Error - Unable to open UART.  Ensure it is not in use by another application\n");
+		run=0;
 	}
 	
 	//CONFIGURE THE UART
@@ -68,41 +93,24 @@ int main(){
 	tcflush(uart0_filestream, TCIFLUSH);
 	tcsetattr(uart0_filestream, TCSANOW, &options);
 
-		//----- TX BYTES -----
-	unsigned char tx_buffer[10];
-	unsigned char *p_tx_buffer;
-	
-	p_tx_buffer = &tx_buffer[0];
-	*p_tx_buffer++ = '/';
-	*p_tx_buffer++ = '?';
-	*p_tx_buffer++ = '!';
-	*p_tx_buffer++ = '\r';
-	*p_tx_buffer++ = '\n';
-	
-	if (uart0_filestream != -1)
-	{
-		int count = write(uart0_filestream, &tx_buffer[0], (p_tx_buffer - &tx_buffer[0]));		//Filestream, bytes to write, number of bytes to write
-		if (count < 0)
-		{
-			printf("UART TX error\n");
-		}
-	}
-	
-		//----- CHECK FOR ANY RX BYTES -----
-	int run=1;
-	int rx_amount=0;
-	char rx_data[1024];
-	char *p_rx_data;
-	p_rx_data = &rx_data[0]; 
 
 	while(run>0){
+		time(&now);//get time
+		seconds = difftime(now, old);//calculate difference
+
+		if (step == 0 && seconds >= 15)//it's been 15 seconds and we finished receiving the last message
+		{
+			old = now;
+			step=1;
+			//std::cout<<step<<"\r\n";					//debug
+		}
+			
+			//----- CHECK FOR ANY RX BYTES -----
 		if (uart0_filestream != -1)
 		{
 			// Read up to 255 characters from the port if they are there
-			char rx_buffer[256];
-			//printf("reading from ISKRA");
 			int rx_length = read(uart0_filestream, (void*)rx_buffer, 255);		//Filestream, buffer to store in, number of bytes to read (max)
-			
+				
 			if (rx_length < 0)
 			{
 				//An error occured (will occur if there are no bytes)
@@ -114,30 +122,160 @@ int main(){
 			else
 			{
 				//Bytes received
-				//std::cout<<rx_buffer[0];
 				for(int X = 0; X < rx_length; X++){
 					*p_rx_data++ = rx_buffer[X];
-					//rx_amount++;
-					//printf("%i",rx_amount);
-					if (strstr(rx_data,"!")){
-						memcpy(ISKRA162.totaal,strstr(rx_data,"1.8.0(")+6,sizeof(ISKRA162.totaal)-1);//search the right value and copy it into the structure
-						ISKRA162.totaal[11]='\0';//zero terminate the string
-						ISKRA162.f_KW_totaal=atof(ISKRA162.totaal);
-						memcpy(ISKRA162.hoog,strstr(rx_data,"1.8.1(")+6,sizeof(ISKRA162.hoog)-1);
-						ISKRA162.hoog[11]='\0';
-						memcpy(ISKRA162.laag,strstr(rx_data,"1.8.2(")+6,sizeof(ISKRA162.laag)-1);
-						ISKRA162.laag[11]='\0';
-						//*p_rx_data++ = '\n';
-						//*p_rx_data++ = '\0';
-						//printf(rx_data);
-						printf("Totaal verbruik: %skWh\n",ISKRA162.totaal);
-						printf("%.0fWh \n",ISKRA162.f_KW_totaal*1000);
-						std::cout<<"Hoog verbruik: "<<ISKRA162.hoog<<"kWh"<<'\n';
-						std::cout<<"Laag verbruik: "<<ISKRA162.laag<<"kWh"<<'\n';
-						run=0;
-					}
 				}
 			}
+		}
+
+		switch (step){
+		case 0: break;//do nothing until it's time to do something again
+		
+		case 1:{//set init message
+			p_tx_buffer = &tx_buffer[0];
+			*p_tx_buffer++ = '/';
+			*p_tx_buffer++ = '?';
+			*p_tx_buffer++ = '!';
+			*p_tx_buffer++ = '\r';
+			*p_tx_buffer++ = '\n';
+			step++;
+			//std::cout<<tx_buffer; 					//debug
+			//std::cout<<step<<"\r\n"; 					//debug
+			break;
+		}
+		
+		case 2:{//send init message
+			if (uart0_filestream != -1){
+				int count = write(uart0_filestream, &tx_buffer[0], (p_tx_buffer - &tx_buffer[0]));		//Filestream, bytes to write, number of bytes to write
+				if (count < 0)
+				{
+					printf("UART TX error\n");
+					run=0;
+				}
+				else{
+					step++;
+					//std::cout<<step<<"\r\n"; 			//debug
+				}
+			}
+			break;
+		}
+		
+		case 3:{//received response so send ack message
+			char ACK = 0x06;
+			if (strstr(rx_data,"/") && strstr(rx_data,"\n")){
+				p_tx_buffer = &tx_buffer[0];
+				*p_tx_buffer++ = ACK;
+				*p_tx_buffer++ = '0';
+				*p_tx_buffer++ = rx_buffer[4];
+				*p_tx_buffer++ = '0';
+				*p_tx_buffer++ = '\r';
+				*p_tx_buffer++ = '\n';
+				step++;
+				//std::cout<<step<<"\r\n"; 				//debug
+			}
+			//printf(rx_data); 							//debug
+			break;
+		}
+		
+		case 4:{
+			if (uart0_filestream != -1){
+				int count = write(uart0_filestream, &tx_buffer[0], (p_tx_buffer - &tx_buffer[0]));		//Filestream, bytes to write, number of bytes to write
+				if (count < 0)
+				{
+					printf("UART TX error\n");
+					run=0;
+				}
+				else{
+					memset(rx_data,0,sizeof(rx_data));	//clear the data
+					p_rx_data = &rx_data[0];			//reset the pointer
+					step++;
+					//std::cout<<step<<"\r\n";			//debug
+				}
+			}
+			break;
+		}
+
+		case 5:{//we have send an acknowledge so we need to switch to the right speed 
+				int speed = rx_buffer[4];
+				switch (speed){
+					case 1:{
+						options.c_cflag = B600 | CS7 | CLOCAL | CREAD | PARENB;			//<Set baud rate to 600 baud
+						tcflush(uart0_filestream, TCIFLUSH);
+						tcsetattr(uart0_filestream, TCSANOW, &options);
+						step++;
+						break;
+
+					}
+					case 2:{
+						options.c_cflag = B1200 | CS7 | CLOCAL | CREAD | PARENB;		//<Set baud rate to 1200 baud
+						tcflush(uart0_filestream, TCIFLUSH);
+						tcsetattr(uart0_filestream, TCSANOW, &options);
+						step++;
+						break;
+
+					}
+					case 3:{
+						options.c_cflag = B2400 | CS7 | CLOCAL | CREAD | PARENB;		//<Set baud rate to 2400 baud
+						tcflush(uart0_filestream, TCIFLUSH);
+						tcsetattr(uart0_filestream, TCSANOW, &options);
+						step++;
+						break;
+
+					}
+					case 4:{
+						options.c_cflag = B4800 | CS7 | CLOCAL | CREAD | PARENB;		//<Set baud rate to 4800 baud
+						tcflush(uart0_filestream, TCIFLUSH);
+						tcsetattr(uart0_filestream, TCSANOW, &options);
+						step++;
+						break;
+
+					}
+					case 5:{
+						options.c_cflag = B9600 | CS7 | CLOCAL | CREAD | PARENB;		//<Set baud rate to 9600 baud
+						tcflush(uart0_filestream, TCIFLUSH);
+						tcsetattr(uart0_filestream, TCSANOW, &options);
+						step++;
+						break;
+
+					}
+					case 6:{
+						options.c_cflag = B19200 | CS7 | CLOCAL | CREAD | PARENB;		//<Set baud rate to 19200 baud
+						tcflush(uart0_filestream, TCIFLUSH);
+						tcsetattr(uart0_filestream, TCSANOW, &options);
+						step++;
+						break;
+
+					}
+					default:{
+						step++;
+						break;
+					}
+				}
+				//std::cout<<step<<"\r\n";					//debug
+				break;
+		}
+		case 6:{//recieve the data
+			if (strstr(rx_data,"!")){						//see if we got all the data
+				memcpy(ISKRA162.totaal,strstr(rx_data,"1.8.0(")+6,sizeof(ISKRA162.totaal)-1);//search the right value and copy it into the structure
+				ISKRA162.totaal[11]='\0';					//zero terminate the string so we can printf
+				ISKRA162.f_KW_totaal=atof(ISKRA162.totaal);
+				memcpy(ISKRA162.hoog,strstr(rx_data,"1.8.2(")+6,sizeof(ISKRA162.hoog)-1);
+				ISKRA162.hoog[11]='\0';
+				memcpy(ISKRA162.laag,strstr(rx_data,"1.8.1(")+6,sizeof(ISKRA162.laag)-1);
+				ISKRA162.laag[11]='\0';
+				//*p_rx_data++ = '\n';
+				//*p_rx_data++ = '\0';
+				//printf(rx_data);
+				printf("Totaal verbruik: %skWh\n",ISKRA162.totaal);
+				//printf("%.0fWh \n",ISKRA162.f_KW_totaal*1000);
+				std::cout<<"Hoog verbruik: "<<ISKRA162.hoog<<"kWh"<<'\n';
+				std::cout<<"Laag verbruik: "<<ISKRA162.laag<<"kWh"<<'\n';
+				memset(rx_data,0,sizeof(rx_data));//clear the data
+				p_rx_data = &rx_data[0];//reset the pointer
+				step=0;//go back step 0 and wait for the next one.
+			}
+			break;
+		}
 		}
 	}
 	
