@@ -85,11 +85,11 @@ int main(){
 	//	PARENB - Parity enable
 	//	PARODD - Odd parity (else even)
 	struct termios options;
-	tcgetattr(uart0_filestream, &options);
+	//tcgetattr(uart0_filestream, &options);
 	//options.c_cflag = B300 | CS7 | CLOCAL | CREAD | PARENB;		//<Set baud rate
-	options.c_iflag = IGNPAR;
-	options.c_oflag = 0;
-	options.c_lflag = 0;
+	//options.c_iflag = IGNPAR;
+	//options.c_oflag = 0;
+	//options.c_lflag = 0;
 	//tcflush(uart0_filestream, TCIFLUSH);
 	//tcsetattr(uart0_filestream, TCSANOW, &options);
 
@@ -132,7 +132,11 @@ int main(){
 		case 0: break;//do nothing until it's time to do something again
 		
 		case 1:{//set init message
+			tcgetattr(uart0_filestream, &options);
 			options.c_cflag = B300 | CS7 | CLOCAL | CREAD | PARENB;		//<Set baud rate
+			options.c_iflag = IGNPAR;
+			options.c_oflag = 0;
+			options.c_lflag = 0;
 			tcflush(uart0_filestream, TCIFLUSH);
 			tcsetattr(uart0_filestream, TCSANOW, &options);
 
@@ -199,10 +203,14 @@ int main(){
 
 		case 5:{//we have send an acknowledge so we need to switch to the right speed 
 				int speed = rx_data[4];
-				//std::cout<<"speed:"<<speed<<"\r\n";		//debug
+				std::cout<<"speed:"<<speed<<"\r\n";		//debug
 				switch (speed){
 					case 1:{
+						tcgetattr(uart0_filestream, &options);
 						options.c_cflag = B600 | CS7 | CLOCAL | CREAD | PARENB;			//<Set baud rate to 600 baud
+						options.c_iflag = IGNPAR;
+						options.c_oflag = 0;
+						options.c_lflag = 0;
 						tcflush(uart0_filestream, TCIFLUSH);
 						tcsetattr(uart0_filestream, TCSANOW, &options);
 						step++;
@@ -212,7 +220,11 @@ int main(){
 
 					}
 					case 2:{
+						tcgetattr(uart0_filestream, &options);
 						options.c_cflag = B1200 | CS7 | CLOCAL | CREAD | PARENB;		//<Set baud rate to 1200 baud
+						options.c_iflag = IGNPAR;
+						options.c_oflag = 0;
+						options.c_lflag = 0;
 						tcflush(uart0_filestream, TCIFLUSH);
 						tcsetattr(uart0_filestream, TCSANOW, &options);
 						step++;
@@ -222,7 +234,11 @@ int main(){
 
 					}
 					case 3:{
+						tcgetattr(uart0_filestream, &options);
 						options.c_cflag = B2400 | CS7 | CLOCAL | CREAD | PARENB;		//<Set baud rate to 2400 baud
+						options.c_iflag = IGNPAR;
+						options.c_oflag = 0;
+						options.c_lflag = 0;
 						tcflush(uart0_filestream, TCIFLUSH);
 						tcsetattr(uart0_filestream, TCSANOW, &options);
 						step++;
@@ -232,7 +248,11 @@ int main(){
 
 					}
 					case 4:{
+						tcgetattr(uart0_filestream, &options);
 						options.c_cflag = B4800 | CS7 | CLOCAL | CREAD | PARENB;		//<Set baud rate to 4800 baud
+						options.c_iflag = IGNPAR;
+						options.c_oflag = 0;
+						options.c_lflag = 0;
 						tcflush(uart0_filestream, TCIFLUSH);
 						tcsetattr(uart0_filestream, TCSANOW, &options);
 						step++;
@@ -242,7 +262,11 @@ int main(){
 
 					}
 					case 5:{
+						tcgetattr(uart0_filestream, &options);
 						options.c_cflag = B9600 | CS7 | CLOCAL | CREAD | PARENB;		//<Set baud rate to 9600 baud
+						options.c_iflag = IGNPAR;
+						options.c_oflag = 0;
+						options.c_lflag = 0;
 						tcflush(uart0_filestream, TCIFLUSH);
 						tcsetattr(uart0_filestream, TCSANOW, &options);
 						step++;
@@ -252,7 +276,11 @@ int main(){
 
 					}
 					case 6:{
+						tcgetattr(uart0_filestream, &options);
 						options.c_cflag = B19200 | CS7 | CLOCAL | CREAD | PARENB;		//<Set baud rate to 19200 baud
+						options.c_iflag = IGNPAR;
+						options.c_oflag = 0;
+						options.c_lflag = 0;
 						tcflush(uart0_filestream, TCIFLUSH);
 						tcsetattr(uart0_filestream, TCSANOW, &options);
 						step++;
