@@ -432,7 +432,6 @@ int main(int argc, char* argv[]){
 
 				//Disconnect from the broker*/
 				MQTTClient_disconnect(client, 10000);
-				MQTTClient_destroy(&client);
 
 				step=0;//go back step 0 and wait for the next one.
 			}
