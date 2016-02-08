@@ -12,11 +12,11 @@
 
 #define ADDRESS     "tcp://localhost:1883"
 #define CLIENTID    "ISKRA_reader"
-#define TOPIC_0111       "0111"
-#define TOPIC_0112       "0112"
-#define TOPIC_0113       "0113"
-#define TOPIC_0114       "0114"
-#define TOPIC_0115       "0115"
+#define TOPIC_0111       "/0111"
+#define TOPIC_0112       "/0112"
+#define TOPIC_0113       "/0113"
+#define TOPIC_0114       "/0114"
+#define TOPIC_0115       "/0115"
 
 #define QOS         1
 #define TIMEOUT     10000L
