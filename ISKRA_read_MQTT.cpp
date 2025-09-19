@@ -12,15 +12,17 @@
 
 #define ADDRESS     "tcp://localhost:1883"
 #define CLIENTID    "ISKRA_reader"
-#define TOPIC_0111       "/0111"
-#define TOPIC_0112       "/0112"
-#define TOPIC_0113       "/0113"
-#define TOPIC_0114       "/0114"
-#define TOPIC_0115       "/0115"
+#define TOPIC_0111_TOTAAL     "/0111"
+#define TOPIC_0112_HOOG       "/0112"
+#define TOPIC_0113_LAAG       "/0113"
+#define TOPIC_0114_WH         "/0114"
+#define TOPIC_0115_A          "/0115"
 
 #define QOS         1
 #define TIMEOUT     10000L
 //using namespace std;
+
+int open_uart(const std::string &device, int baud, bool parity);
 
 struct ISKRA{
 	char totaal[12];
@@ -163,23 +165,8 @@ int main(int argc, char* argv[]){
 		case 0: break;//do nothing until it's time to do something again
 		
 		case 1:{//set init message
-			uart0_filestream = open("/dev/ttyUSB0", O_RDWR | O_NOCTTY | O_NDELAY);		//Open in non blocking read/write mode
-			//std::cout<<uart0_filestream<<'\n';
-			if (uart0_filestream == -1)
-			{
-				//ERROR - CAN'T OPEN SERIAL PORT
-				printf("Error - Unable to open UART.  Ensure it is not in use by another application\n");
-				run=0;
-				break;
-			}
-
-			tcgetattr(uart0_filestream, &options);
-			options.c_cflag = B300 | CS7 | CLOCAL | CREAD | PARENB;		//<Set baud rate
-			options.c_iflag = IGNPAR;
-			options.c_oflag = 0;
-			options.c_lflag = 0;
-			tcflush(uart0_filestream, TCIFLUSH);
-			tcsetattr(uart0_filestream, TCSANOW, &options);
+			int uart_fd = open_uart("/dev/ttyUSB0", B300, true);
+			if(uart_fd < 0) return -1;
 
 			memset(tx_buffer,0,sizeof(tx_buffer));//clear the tx buffer
 			p_tx_buffer = &tx_buffer[0];
@@ -455,4 +442,25 @@ int main(int argc, char* argv[]){
     MQTTClient_disconnect(client, 10000);
     MQTTClient_destroy(&client);
 	return 0;
+}
+
+int open_uart(const std::string &device, int baud, bool parity) {
+    int fd = open(device.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
+    if(fd == -1) {
+        perror("UART open failed");
+        return -1;
+    }
+
+    struct termios options{};
+    tcgetattr(fd, &options);
+
+    options.c_cflag = baud | CS7 | CLOCAL | CREAD;
+    if (parity) options.c_cflag |= PARENB;
+    options.c_iflag = IGNPAR;
+    options.c_oflag = 0;
+    options.c_lflag = 0;
+
+    tcflush(fd, TCIFLUSH);
+    tcsetattr(fd, TCSANOW, &options);
+    return fd;
 }
