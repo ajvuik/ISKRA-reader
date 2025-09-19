@@ -1,0 +1,3 @@
+/home/arjan/programmeren/ISKRA-reader/build/CMakeFiles/edit_cache.dir
+/home/arjan/programmeren/ISKRA-reader/build/CMakeFiles/rebuild_cache.dir
+/home/arjan/programmeren/ISKRA-reader/build/CMakeFiles/iskra_reader.dir

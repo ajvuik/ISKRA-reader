@@ -354,8 +354,18 @@ int main(int argc, char* argv[]){
 		}
 		case 6:{//receive the data
 			if (strstr(rx_data,"!")){						//see if we got all the data
-				memcpy(ISKRA162.totaal,strstr(rx_data,"1.8.0(")+6,sizeof(ISKRA162.totaal)-1);//search the right value and copy it into the structure
-				ISKRA162.totaal[11]='\0';					//zero terminate the string so we can printf
+//				memcpy(ISKRA162.totaal,strstr(rx_data,"1.8.0(")+6,sizeof(ISKRA162.totaal)-1);//search the right value and copy it into the structure
+//				ISKRA162.totaal[11]='\0';					//zero terminate the string so we can printf
+				std::string data(rx_data);
+				auto start = data.find("1.8.0(");
+				if(start != std::string::npos){
+					auto end = data.find(')', start);
+					if(end != std::string::npos){
+						std::string val = data.substr(start+6, end-(start+6));
+						ISKRA162.f_KW_totaal = std::stod(val);
+					}
+				}
+
 				ISKRA162.f_KW_totaal=atof(ISKRA162.totaal);
 				memcpy(ISKRA162.hoog,strstr(rx_data,"1.8.2(")+6,sizeof(ISKRA162.hoog)-1);
 				ISKRA162.hoog[11]='\0';

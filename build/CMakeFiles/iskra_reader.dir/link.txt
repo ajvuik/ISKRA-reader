@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/iskra_reader.dir/ISKRA_read_new.cpp.o -o iskra_reader  -lpaho-mqtt3c -lpaho-mqtt3a -lpthread 

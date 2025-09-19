@@ -1,0 +1,28 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/arjan/programmeren/ISKRA-reader/ISKRA_read_new.cpp
+iostream
+-
+string
+-
+cstring
+-
+cstdlib
+-
+ctime
+-
+unistd.h
+-
+fcntl.h
+-
+termios.h
+-
+MQTTClient.h
+-
+
